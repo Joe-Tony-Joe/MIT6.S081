@@ -144,6 +144,20 @@ found:
   return p;
 }
 
+//calculate num of not UNUSED processes in the system
+uint64 proc_num()
+{
+  struct proc *p;
+  uint64 count = 0;
+  for(p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if(p->state != UNUSED)
+      count++;
+    release(&p->lock);
+  }
+  return count;
+}
+
 // free a proc structure and the data hanging from it,
 // including user pages.
 // p->lock must be held.
@@ -294,6 +308,9 @@ fork(void)
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
+
+  //copy trace mask
+  np->trace_mask = p->trace_mask;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
